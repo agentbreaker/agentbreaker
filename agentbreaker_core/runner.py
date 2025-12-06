@@ -87,3 +87,67 @@ class AgentBreakerRunner:
             "results": [],
             "error": f"Test suite '{suite_name}' is not registered yet.",
         }
+ 
+    def send_prompt(self, prompt: str) -> Dict[str, Any]:
+        """
+        Minimal execution engine.
+        
+        Sends a single message to an OpenAI-compatible chat endpoint.
+        This allows AgentBreaker to start performing real tests.
+
+        Requirements:
+        - self.target.base_url must be an OpenAI-style endpoint, e.g.
+          "https://api.openai.com/v1/chat/completions"
+        - self.target.api_key must be set.
+
+        Returns structured result:
+        {
+            "status": "ok" or "error",
+            "response_text": "...",
+            "raw": {...}
+        }
+        """
+
+        import requests
+
+        headers = {
+            "Content-Type": "application/json",
+        }
+
+        if self.target.api_key:
+            headers["Authorization"] = f"Bearer {self.target.api_key}"
+
+        payload = {
+            "model": self.target.model or "gpt-4o-mini",
+            "messages": [
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0
+        }
+
+        try:
+            r = requests.post(self.target.base_url, json=payload, headers=headers)
+        except Exception as e:
+            return {
+                "status": "network_error",
+                "error": str(e)
+            }
+
+        if r.status_code != 200:
+            return {
+                "status": "http_error",
+                "code": r.status_code,
+                "response": r.text
+            }
+
+        data = r.json()
+        try:
+            text = data["choices"][0]["message"]["content"]
+        except Exception:
+            text = None
+
+        return {
+            "status": "ok",
+            "response_text": text,
+            "raw": data
+        }
