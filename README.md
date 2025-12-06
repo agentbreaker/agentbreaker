@@ -98,6 +98,7 @@ We use:
 
 ## Planned Structure
 
+```
 agentbreaker/
 │
 ├─ agentbreaker_core/      # core logic and test runner
@@ -115,7 +116,7 @@ agentbreaker/
 │
 └─ docs/
     └─ methodology.md      # detailed description of the testing approach
-
+```
 ## Roadmap (High Level)
 
  - Define full test catalogue (attack library) as structured data.
